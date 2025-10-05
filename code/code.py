@@ -21,9 +21,6 @@ print(data_fake.head())
 data_true = data_true.drop(['title', 'subject', 'date'], axis=1)
 data_fake = data_fake.drop(['title', 'subject', 'date'], axis=1)
 
-print(data_true.head())
-print(data_fake.head())
-
 #Combinar datasets
 data = pd.concat([data_true, data_fake], ignore_index=True)
 print(data.head())
