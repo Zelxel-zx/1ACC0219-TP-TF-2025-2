@@ -1,30 +1,47 @@
+import re
+import spacy
+import numpy as np
 import pandas as pd
-data_true = pd.read_csv('data/True.csv')
-data_fake = pd.read_csv('data/Fake.csv')
+nlp = spacy.load("en_core_web_sm",disable=["ner", "parser"])
 
-#Noticias reales
-print(data_true.head())
-print(data_true.info())
+def limpieza(textos):
+    resultados = []
+    # Convertir todo a minúsculas antes de procesar
+    textos = [texto.lower() for texto in textos]
+    # Procesar con spacy
+    for doc in nlp.pipe(textos, batch_size=1000):
+        palabras = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
 
-#Noticias falsas
-print(data_fake.head())
-print(data_fake.info())
+        # Eliminar palabras duplicadas, manteniendo el orden
+        _, idx = np.unique(palabras, return_index=True)
+        texto_limpio = np.array(palabras)[np.sort(idx)].tolist()
 
-#Etiquetar data real y falsa
-data_true['label'] = 1
-data_fake['label'] = 0
+        resultados.append(texto_limpio)
+    return resultados
 
-print(data_true.head())
-print(data_fake.head())
+if __name__ == "__main__":
 
-#Eliminar tittle, subject y date
-data_true = data_true.drop(['title', 'subject', 'date'], axis=1)
-data_fake = data_fake.drop(['title', 'subject', 'date'], axis=1)
+    data = pd.read_csv('data/news_dataset.zip', compression='zip') 
+    print(data.info()) 
+    #Buscar nulos y duplicados 
+    print("Nulos:\n",data.isnull().sum())
+    print("Duplicados: ",data.duplicated().sum())
 
-print(data_true.head())
-print(data_fake.head())
+    #Eliminar duplicados 
+    data.drop_duplicates(inplace=True) 
+    print("Duplicados: ",data.duplicated().sum())
 
-#Combinar datasets
-data = pd.concat([data_true, data_fake], ignore_index=True)
-print(data.head())
-data.to_csv('data/news_dataset.zip', index=False, compression={'method': 'zip', 'archive_name': 'news_dataset.csv'})
+    #Procesar en chunks 
+    chunk_size = 5000  # Cambia según tu RAM
+    textos = list(data['text'])
+    limpiar_textos = []
+    
+    print("Procesando textos en chunks")
+    for i in range(0, len(textos), chunk_size):
+        chunk = textos[i:i+chunk_size]
+        limpiar_chunk = limpieza(chunk)
+        limpiar_textos.extend(limpiar_chunk)
+    #Aplicar limpieza
+    limpiar_textos = limpieza(textos)
+    print(limpiar_textos[:5])
+
