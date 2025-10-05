@@ -9,6 +9,7 @@ def limpieza(textos):
     textos = [texto.lower() for texto in textos]
     # Procesar con spacy
     for doc in nlp.pipe(textos, batch_size=1000):
+        #Conservar solo la lematizacion de tokens alfabéticos y no stopwords, 
         palabras = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
 
         # Eliminar palabras duplicadas, manteniendo el orden
