@@ -34,7 +34,7 @@ Para su posterior análisis será necesario realizar el preprocesamiento y norma
 El dataset se emplea para entrenar y evaluar modelos de NLP para poder cumplir los objetivos planteados en el punto anterior (Descripción del caso de uso).
 
 ## 🧠 Conclusiones
-- El preprocesamiento de texto es fundamental para obtener buenos resultados.  
-- 
+- Las noticias falsas suelen presentar características textuales específicas, como un uso más frecuente de lenguaje sensacionalista, menor objetividad y estructuras menos formales en comparación con las noticias reales. Estos patrones, capturados por los algoritmos, permiten que el modelo establezca una frontera clara entre ambas categorías, reforzando la idea de que el análisis lingüístico es una herramienta valiosa para la verificación de información en entornos digitales.  
+- La importancia de contar con datos balanceados y correctamente depurados para evitar sesgos en la predicción. Esto permitió comprender el proceso completo de la recolección y limpieza de datos hasta la evaluación de modelos, fortaleciendo las habilidades analíticas y técnicas necesarias para abordar problemas reales de desinformación.
 ## ⚖️ Licencia
 Este proyecto está bajo la licencia **MIT**
