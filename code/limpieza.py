@@ -11,12 +11,7 @@ def limpieza(textos):
     for doc in nlp.pipe(textos, batch_size=1000):
         #Conservar solo la lematizacion de tokens alfabéticos y no stopwords, 
         palabras = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
-
-        # Eliminar palabras duplicadas, manteniendo el orden
-        _, idx = np.unique(palabras, return_index=True)
-        texto_limpio = np.array(palabras)[np.sort(idx)].tolist()
-
-        resultados.append(texto_limpio)
+        resultados.append(palabras)
     return resultados
 
 if __name__ == "__main__":
