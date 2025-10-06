@@ -1,6 +1,7 @@
 import spacy
 import numpy as np
 import pandas as pd
+from collections import Counter
 nlp = spacy.load("en_core_web_sm",disable=["ner", "parser"])
 
 def limpieza(textos):
@@ -10,9 +11,28 @@ def limpieza(textos):
     # Procesar con spacy
     for doc in nlp.pipe(textos, batch_size=1000):
         #Conservar solo la lematizacion de tokens alfabéticos y no stopwords, 
-        palabras = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
+        palabras = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop and len(token.lemma_) >1]
         resultados.append(palabras)
     return resultados
+
+def word_count(limpiar_textos, labels):
+    # Separar textos por label
+    falsas = []
+    verdaderas = []
+
+    for palabras, label in zip(limpiar_textos, labels):
+        if label == 0:
+            falsas.extend(palabras)
+        else:
+            verdaderas.extend(palabras)
+
+    # Contar frecuencia
+    count_falsas = Counter(falsas)
+    count_verdaderas = Counter(verdaderas)
+
+    palabra_mas_falsa = count_falsas.most_common(1)[0]
+    palabra_mas_verdadera = count_verdaderas.most_common(1)[0]
+    return palabra_mas_falsa, palabra_mas_verdadera
 
 if __name__ == "__main__":
 
@@ -37,6 +57,11 @@ if __name__ == "__main__":
         limpiar_chunk = limpieza(chunk)
         limpiar_textos.extend(limpiar_chunk)
     #Aplicar limpieza
-    limpiar_textos = limpieza(textos)
     print(limpiar_textos[:5])
+    
+    labels = list(data['label'])
+    palabra_falsa, palabra_verdadera = word_count(limpiar_textos, labels)
+
+    print(f"La palabra que más se repite en noticias falsas es: {palabra_falsa[0]} ({palabra_falsa[1]} veces)")
+    print(f"La palabra que más se repite en noticias verdaderas es: {palabra_verdadera[0]} ({palabra_verdadera[1]} veces)")
 
