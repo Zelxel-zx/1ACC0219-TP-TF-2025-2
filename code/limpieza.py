@@ -1,6 +1,7 @@
 import spacy
-import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
+from wordcloud import WordCloud
 from collections import Counter
 nlp = spacy.load("en_core_web_sm",disable=["ner", "parser"])
 
@@ -32,7 +33,16 @@ def word_count(limpiar_textos, labels):
 
     palabra_mas_falsa = count_falsas.most_common(1)[0]
     palabra_mas_verdadera = count_verdaderas.most_common(1)[0]
-    return palabra_mas_falsa, palabra_mas_verdadera
+    return falsas, verdaderas, palabra_mas_falsa, palabra_mas_verdadera
+
+def generar_nube(palabras, titulo):
+    texto = " ".join(palabras)
+    nube = WordCloud(width=800,height=400,background_color='white',collocations=False).generate(texto)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(nube, interpolation='bilinear')
+    plt.axis('off')
+    plt.title(titulo, fontsize=16)
+    plt.show()
 
 if __name__ == "__main__":
 
@@ -60,8 +70,10 @@ if __name__ == "__main__":
     print(limpiar_textos[:5])
     
     labels = list(data['label'])
-    palabra_falsa, palabra_verdadera = word_count(limpiar_textos, labels)
+    falsas, verdaderas, palabra_falsa, palabra_verdadera = word_count(limpiar_textos, labels)
 
     print(f"La palabra que más se repite en noticias falsas es: {palabra_falsa[0]} ({palabra_falsa[1]} veces)")
-    print(f"La palabra que más se repite en noticias verdaderas es: {palabra_verdadera[0]} ({palabra_verdadera[1]} veces)")
-
+    print(f"La palabra que más se repite en noticias verdaderas es: {palabra_verdadera[0]} ({palabra_verdadera[1]} veces)") 
+    
+    generar_nube(falsas, "Nube de Palabras - Noticias Falsas")
+    generar_nube(verdaderas, "Nube de Palabras - Noticias Verdaderas")
