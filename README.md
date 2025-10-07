@@ -8,6 +8,7 @@ Se busca identificar patrones lingüísticos que permitan diferenciar las notici
 ## 👥 Nombre de los alumnos participantes
 - **Alessandro Daniel Bravo Castillo** — U202224501  
 - **Nicole Vásquez Tinco** — U202322884
+- **Marco Antonio Luciano Cabrera Díaz** — U202318540
 ---
 ## 🧾 Descripción del dataset
 El dataset utilizado proviene del conjunto **Fake and Real News Dataset** (Kaggle).  
