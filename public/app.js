@@ -162,7 +162,7 @@ if (window.elementSdk) {
 // ==== CARGAR MÉTRICAS DEL MODELO DESDE JSON ====
 async function loadMetrics() {
   try {
-    const resp = await fetch("/Resultados/metricas_aya23.json");
+    const resp = await fetch("./Resultados/metricas_aya23.json");
     if (!resp.ok) {
       console.warn("No se pudieron cargar las métricas:", resp.status);
       return;
