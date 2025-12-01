@@ -159,7 +159,56 @@ if (window.elementSdk) {
   });
 }
 
-// Form handling
+// ==== CARGAR MÉTRICAS DEL MODELO DESDE JSON ====
+async function loadMetrics() {
+  try {
+    const resp = await fetch("/Resultados/metricas_aya23.json");
+    if (!resp.ok) {
+      console.warn("No se pudieron cargar las métricas:", resp.status);
+      return;
+    }
+
+    const data = await resp.json();
+
+    // Actualizar tarjetas de métricas (valores en porcentaje con 1 decimal)
+    const metricCards = document.querySelectorAll(".metric-card div:first-child");
+    if (metricCards.length >= 4) {
+      metricCards[0].textContent = `${(data.accuracy * 100).toFixed(1)}%`;
+      metricCards[1].textContent = `${(data.precision * 100).toFixed(1)}%`;
+      metricCards[2].textContent = `${(data.recall * 100).toFixed(1)}%`;
+      metricCards[3].textContent = `${(data.f1 * 100).toFixed(1)}%`;
+    }
+
+    // Actualizar matriz de confusión si existe
+    if (Array.isArray(data.confusion_matrix)) {
+      const cm = data.confusion_matrix;
+      const tn = cm[0][0];
+      const fp = cm[0][1];
+      const fn = cm[1][0];
+      const tp = cm[1][1];
+
+      const matrixNumbers = document.querySelectorAll(".matrix-cell div:first-child");
+      if (matrixNumbers.length >= 4) {
+        // Orden visual actual en index.html:
+        // [0] = Verdadero Positivo (Real / Pred Real)        -> TP
+        // [1] = Falso Negativo (Real / Pred Falsa)           -> FN
+        // [2] = Falso Positivo (Falsa / Pred Real)           -> FP
+        // [3] = Verdadero Negativo (Falsa / Pred Falsa)      -> TN
+        matrixNumbers[0].textContent = tp;
+        matrixNumbers[1].textContent = fn;
+        matrixNumbers[2].textContent = fp;
+        matrixNumbers[3].textContent = tn;
+      }
+    }
+  } catch (err) {
+    console.warn("Error cargando metricas_aya23.json:", err);
+  }
+}
+
+// Lanzar carga de métricas al iniciar
+loadMetrics();
+
+// ==== FORMULARIO DE VERIFICACIÓN ====
 const form = document.getElementById("news-form");
 const verifyButton = document.getElementById("verify-button");
 const resultsSection = document.getElementById("results-section");
@@ -173,43 +222,57 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Show loading state
+  // Estado de carga
   verifyButton.innerHTML =
     '<div style="display: flex; align-items: center; justify-content: center; gap: 8px;"><div class="spinner"></div><span>Analizando...</span></div>';
   verifyButton.disabled = true;
 
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  // Simulate results (random for demo)
-  const isReal = Math.random() > 0.5;
-  const confidence = Math.floor(Math.random() * 20) + 75; // 75-95%
-
-  // Update results
   const resultBadge = document.getElementById("result-badge");
   const confidenceFill = document.getElementById("confidence-fill");
   const interpretationText = document.getElementById("interpretation-text");
 
-  if (isReal) {
-    resultBadge.textContent = "Noticia Real";
-    resultBadge.className = "result-badge badge-real";
-    confidenceFill.style.background = "#10b981";
-    interpretationText.textContent = `El modelo ha determinado con un ${confidence}% de confianza que esta noticia tiene características de ser verdadera. Se recomienda verificar fuentes adicionales para mayor certeza.`;
-  } else {
-    resultBadge.textContent = "Noticia Falsa";
-    resultBadge.className = "result-badge badge-fake";
-    confidenceFill.style.background = "#ef4444";
-    interpretationText.textContent = `El modelo ha determinado con un ${confidence}% de confianza que esta noticia tiene características de ser falsa o desinformación. Se recomienda no compartir esta información sin verificación adicional.`;
+  try {
+    // Llamar al backend Aya
+    const resp = await fetch("http://localhost:8000/clasificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto: newsText })
+    });
+
+    if (!resp.ok) {
+      throw new Error(`Error del backend: ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const label = data.label; // 0 = falsa, 1 = verdadera
+
+    // Confianza heurística fija: 90%
+    const confidence = 90;
+
+    if (label === 1) {
+      resultBadge.textContent = "Noticia Real";
+      resultBadge.className = "result-badge badge-real";
+      confidenceFill.style.background = "#10b981";
+      interpretationText.textContent = `El modelo Aya ha clasificado esta noticia como VERDADERA con una confianza heurística del ${confidence}%. Se recomienda igualmente contrastar con fuentes oficiales.`;
+    } else {
+      resultBadge.textContent = "Noticia Falsa";
+      resultBadge.className = "result-badge badge-fake";
+      confidenceFill.style.background = "#ef4444";
+      interpretationText.textContent = `El modelo Aya ha clasificado esta noticia como FALSA con una confianza heurística del ${confidence}%. Se recomienda no difundirla sin verificación adicional.`;
+    }
+
+    confidenceFill.style.width = `${confidence}%`;
+    confidenceFill.textContent = `${confidence}%`;
+
+    // Mostrar resultados
+    resultsSection.style.display = "block";
+    resultsSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (error) {
+    console.error("Error llamando al backend Aya:", error);
+    alert("No se pudo contactar con el modelo Aya. Asegúrate de que el backend esté corriendo en http://localhost:8000.");
+  } finally {
+    // Reset botón
+    verifyButton.textContent = defaultConfig.button_text;
+    verifyButton.disabled = false;
   }
-
-  confidenceFill.style.width = `${confidence}%`;
-  confidenceFill.textContent = `${confidence}%`;
-
-  // Show results section
-  resultsSection.style.display = "block";
-  resultsSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-  // Reset button
-  verifyButton.textContent = defaultConfig.button_text;
-  verifyButton.disabled = false;
 });
