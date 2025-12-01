@@ -27,9 +27,9 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # o ["http://127.0.0.1:5500", "http://localhost:8000"] si quieres más seguro
+    allow_origins=["*"],      
     allow_credentials=True,
-    allow_methods=["*"],          # permite GET, POST, OPTIONS, etc.
+    allow_methods=["*"],         
     allow_headers=["*"],
 )
 class NewsRequest(BaseModel):
@@ -37,29 +37,34 @@ class NewsRequest(BaseModel):
 
 
 class NewsResponse(BaseModel):
-    label: int  # 0=falsa, 1=verdadera
-    confidence: float  # heurística, por ejemplo 0.9
+    label: int 
+    confidence: float 
 
 
 def clasificar_aya(texto: str) -> int:
-    """Misma lógica que en tu notebook: devuelve 0 o 1."""
+    """
+    Devuelve 0 si Aya cree que la noticia es FALSA,
+    1 si cree que es VERDADERA.
+    """
+
     prompt = (
-        "Clasifica la noticia como 0=falsa o 1=verdadera.\n"
-        "Reglas:\n"
-        "- 1 si el texto tiene estilo periodístico, hechos plausibles, citas o instituciones reales.\n"
-        "- 0 si hay insultos, lenguaje emocional, propaganda, formato caótico o repeticiones absurdas.\n"
-        "- Si no hay señales claras de falsedad, marca 1.\n"
-        "Responde solo con 0 o 1.\n\n"
-        "Ejemplos:\n"
-        "FALSO: 'Aquí está el falso negro... Sanders... #DemDebate' -> 0\n"
-        "FALSO: 'Clinton vence a Trump... EE., EE., EE...' -> 0\n"
-        "FALSO: 'Roy Moore títere Schumer/Pelosi... Rusia Rusia Rusia' -> 0\n\n"
-        "VERDADERO: 'Singapur desplegará autobuses autónomos en 2022...' -> 1\n"
-        "VERDADERO: 'Marcus Pretzell deja la AfD en Alemania...' -> 1\n"
-        "VERDADERO: 'El Servicio Secreto investiga incidente con fotógrafo de Time...' -> 1\n\n"
-        "Noticia:\n"
-        f"{texto}\n\n"
-        "Respuesta:"
+    "Clasifica la siguiente noticia como 0=falsa o 1=verdadera.\n"
+    "Reglas:\n"
+    "- Marca 1 (verdadera) si el texto parece una noticia periodística normal: coherente, descriptiva, "
+    "con hechos plausibles, instituciones reales, lugares, fechas o citas.\n"
+    "- Marca 0 (falsa) solo si hay señales claras de desinformación: insultos, lenguaje muy emocional o agresivo, "
+    "teorías conspirativas, exageraciones extremas, estructura caótica o texto claramente propagandístico.\n"
+    "- Si el texto es neutral, informativo o no muestra señales fuertes de falsedad, clasifícalo como 1.\n"
+    "- No seas demasiado estricto: recuerda que muchas noticias son verdaderas aunque no tengas toda la evidencia.\n"
+    "Responde SOLO con 0 o 1.\n\n"
+    "Ejemplos:\n"
+    "FALSO -> 0: 'Aquí está el falso negro... Sanders... #DemDebate'\n"
+    "FALSO -> 0: 'Trump llama títere, desastre, WEAK on Crime... Rusia Rusia Rusia...'\n"
+    "VERDADERO -> 1: 'Singapur planea desplegar autobuses autónomos en 2022 para mejorar el transporte público.'\n"
+    "VERDADERO -> 1: 'El Servicio Secreto investiga un incidente con un fotógrafo de Time en un mitin de Trump.'\n\n"
+    "Noticia:\n"
+    f"{texto}\n\n"
+    "Respuesta:"
     )
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
