@@ -4,6 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from huggingface_hub import login
 import torch
 import re
+from fastapi.middleware.cors import CORSMiddleware
 
 # AUTENTICACIÓN EN HUGGING FACE
 # IMPORTANTE: reemplaza "tu_nuevo_token_aqui" por tu token real
@@ -24,7 +25,13 @@ model = AutoModelForCausalLM.from_pretrained(
 
 app = FastAPI()
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # o ["http://127.0.0.1:5500", "http://localhost:8000"] si quieres más seguro
+    allow_credentials=True,
+    allow_methods=["*"],          # permite GET, POST, OPTIONS, etc.
+    allow_headers=["*"],
+)
 class NewsRequest(BaseModel):
     texto: str
 
